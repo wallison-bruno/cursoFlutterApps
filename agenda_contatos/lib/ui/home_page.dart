@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:agenda_contatos/helpers/contact_helper.dart';
+import 'package:agenda_contatos/ui/contact_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 
@@ -17,7 +18,10 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
+    _getAllContact();
+  }
 
+  _getAllContact() {
     helper.getAllcontacts().then((list) {
       setState(() {
         //-> 'SetState' atualiza na tela do app.
@@ -36,7 +40,9 @@ class _HomePageState extends State<HomePage> {
       ),
       backgroundColor: Colors.white,
       floatingActionButton: FloatingActionButton(
-        onPressed: () {},
+        onPressed: () {
+          _showContactPage();
+        },
         child: Icon(Icons.add),
         backgroundColor: Colors.red,
       ),
@@ -100,6 +106,35 @@ class _HomePageState extends State<HomePage> {
           ),
         ),
       ),
+      onTap: () {
+        _showContactPage(contact: listContacts[index]);
+      },
     );
+  }
+
+  void _showContactPage({Contact contact}) async {
+    final recContact = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ContactPage(
+          contato: contact,
+        ),
+      ),
+    );
+    //? Espera retornar um contato.
+    if (recContact != null) {
+      //-> Se for 'true' então , ou salva ou atualiza o contato.
+      //-> se não veio contato então não faz nada.
+      if (contact != null) {
+        // Se eu mandei um contato, então ele veio editado.
+        await helper.updateContact(recContact);
+      } else {
+        // Se eu não mandei um tanto, então esse que veio é novo.
+        await helper.saveContact(recContact);
+      }
+      setState(() {
+        _getAllContact();
+      });
+    }
   }
 }
